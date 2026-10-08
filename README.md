@@ -1,10 +1,10 @@
 # Televex
 
-A fast, resumable Telegram file downloader built with Python and TDLib.
+A fast, resumable Telegram bulk file downloader built with Python and TDLib.
 
 Download files from chats, channels, groups, or Saved Messages through a simple desktop GUI or the command line.
 
-![Televault](docs/screenshot.png)
+![Televex](docs/screenshot.png)
 
 ## Features
 
