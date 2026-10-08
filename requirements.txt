@@ -1,0 +1,6 @@
+python-telegram>=0.18
+# python-telegram imports pkg_resources to find its bundled libtdjson, and setuptools
+# removed pkg_resources in version 82 (Feb 2026). Keep this cap until python-telegram drops it.
+setuptools>=65,<81
+# Per-user data folder for the packaged app (config + TDLib session)
+platformdirs>=3

@@ -1,0 +1,66 @@
+name: Build apps
+
+# Push a tag like v1.0.0 to build Linux, Windows and macOS apps and attach them to a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:   # manual run: builds and uploads artifacts, but does not create a release
+
+permissions:
+  contents: write      # needed to create the release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04      # older glibc than ubuntu-latest, so the binary runs on more distros
+            name: linux
+            flags: --onefile
+          - os: windows-latest
+            name: windows
+            flags: --onefile --windowed
+          - os: macos-latest      # Apple Silicon runner; see README for Intel notes
+            name: macos
+            flags: --windowed     # produces TelegramBulkDownloader.app (onefile+windowed is deprecated on macOS)
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt pyinstaller
+      - name: Check that Tk is available
+        run: python -c "import tkinter; print('Tk', tkinter.TkVersion)"
+      - name: Build
+        run: pyinstaller --noconfirm ${{ matrix.flags }} --collect-all telegram --name TelegramBulkDownloader gui.py
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: cd dist && zip ../TelegramBulkDownloader-linux.zip TelegramBulkDownloader
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path dist\TelegramBulkDownloader.exe -DestinationPath TelegramBulkDownloader-windows.zip
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: ditto -c -k --keepParent dist/TelegramBulkDownloader.app TelegramBulkDownloader-macos.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TelegramBulkDownloader-${{ matrix.name }}
+          path: TelegramBulkDownloader-${{ matrix.name }}.zip
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true

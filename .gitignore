@@ -1,0 +1,23 @@
+# Secrets and Telegram session
+config.json
+tdlib-data/
+state*.json
+
+# Downloaded files
+downloads/
+*.part
+
+# Python / build output
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+*.tmp
+.idea/
+.vscode/
